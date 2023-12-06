@@ -199,29 +199,18 @@ class GraphViewModel {
         this.layers_show[layer] = show;
 
         this.layers[layer].forEach(vertexID => {
-            const vertex = this.vertexes[vertexID];
-            if (show) {
-                vertex.show();
-            } else {
-                vertex.hide();
-            }
+            this.vertexes[vertexID].set_visible(show);
         });
 
         this.edges.forEach(edge => {
             const source = edge.source;
             const target = edge.target;
-            if (source.layer == layer && target.layer == layer) {
-                if (show && this.layer_edges_show) {
-                    edge.show();
-                } else {
-                    edge.hide();
-                }
-            } else if ((source.layer == layer || target.layer == layer)) {
-                if (show && this.between_layer_edges_show) {
-                    edge.show();
-                } else {
-                    edge.hide();
-                }
+            if (source.layer == layer &&
+                target.layer == layer) {
+                edge.set_visible(show && this.layer_edges_show);
+            } else if ((source.layer == layer ||
+                        target.layer == layer)) {
+                edge.set_visible(show && this.between_layer_edges_show);
             }
         });
     }
@@ -237,14 +226,11 @@ class GraphViewModel {
         this.layer_edges_show = show;
 
         this.edges.forEach(edge => {
-            const source = edge.source;
-            const target = edge.target;
-            if (source.layer == target.layer && this.layers_show[source.layer]) {
-                if (show) {
-                    edge.show();
-                } else {
-                    edge.hide();
-                }
+            const source_layer = edge.source.layer;
+            const target_layer = edge.target.layer;
+            if (source_layer == target_layer &&
+                this.layers_show[source_layer]) {
+                edge.set_visible(show);
             }
         });
     }
@@ -255,14 +241,12 @@ class GraphViewModel {
         this.between_layer_edges_show = show;
 
         this.edges.forEach(edge => {
-            const source = edge.source;
-            const target = edge.target;
-            if (source.layer != target.layer && this.layers_show[source.layer] && this.layers_show[target.layer]) {
-                if (show) {
-                    edge.show();
-                } else {
-                    edge.hide();
-                }
+            const source_layer = edge.source.layer;
+            const target_layer = edge.target.layer;
+            if (source_layer != target_layer &&
+                this.layers_show[source_layer] &&
+                this.layers_show[target_layer]) {
+                edge.set_visible(show);
             }
         });
     }
@@ -292,12 +276,8 @@ class VertexViewModel {
         this.mesh.material.color.setHex(color);
     }
 
-    hide() {
-        this.mesh.visible = false;
-    }
-
-    show() {
-        this.mesh.visible = true;
+    set_visible(visible) {
+        this.mesh.visible = visible;
     }
 }
 
@@ -325,7 +305,7 @@ class EdgeViewModel {
 
         scene.add(this.mesh);
 
-        this.hide();
+        this.set_visible(false);
     }
 
     update() {
@@ -339,13 +319,9 @@ class EdgeViewModel {
 
         this.mesh.geometry.attributes.position.needsUpdate = true;
     }
-
-    hide() {
-        this.mesh.visible = false;
-    }
-
-    show() {
-        this.mesh.visible = true;
+    
+    set_visible(visible) {
+        this.mesh.visible = visible;
     }
 
     destroy() {
@@ -367,7 +343,9 @@ class LoopViewModel {
 
         scene.add(this.mesh);
 
-        this.hide();
+        this.set_visible(false);
+
+        this.update();
     }
 
     update() {
@@ -376,12 +354,8 @@ class LoopViewModel {
         this.mesh.position.z = this.source.mesh.position.z;
     }
 
-    hide() {
-        this.mesh.visible = false;
-    }
-
-    show() {
-        this.mesh.visible = true;
+    set_visible(visible) {
+        this.mesh.visible = visible;
     }
 
     destroy() {
