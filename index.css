@@ -1,0 +1,47 @@
+body {
+    align-items: center;
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background: linear-gradient(0deg, #011635 0%, #011635 99%, #00000000 100%);
+    color: #fff;
+    padding: 10px 10px 10px 10px;
+    text-align: center;
+    font-family: 'Nova Square', sans-serif;
+    width: fit-content;
+    height: fit-content;
+    position: fixed;
+    border-radius: 10px 10px 0 0;   
+    bottom: 0;
+}
+
+a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.project_name {
+    margin: 0;
+    font-size: 30px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    user-select: none;
+}
+
+.material-symbols-outlined {
+    font-size: 30px;
+    vertical-align: middle;
+    font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24
+}
+
