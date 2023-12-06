@@ -70,6 +70,7 @@ class GraphViewModel {
 
         this.graph.independentSet.forEach(ISID => {
             const vertex = this.vertexes[ISID];
+            if (vertex == undefined || vertex.layer == 0) return;
             vertex.layer = 0;
             vertex.corrupted = false;
             this.layers[0].push(vertex.id);
@@ -106,6 +107,9 @@ class GraphViewModel {
 
         this.graph.edges.forEach(edge => {
             const [source, target] = edge;
+
+            if (source == target) return;
+            
             const sourceVertex = this.vertexes[source];
             const targetVertex = this.vertexes[target];
 

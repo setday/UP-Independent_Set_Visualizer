@@ -43,8 +43,9 @@ subfolder1.add( {'Layer 2 (Dist = 2)': true}, "Layer 2 (Dist = 2)" ).listen().on
 subfolder1.add( {'Layer 3 (Lost | Dist > 2)': true}, "Layer 3 (Lost | Dist > 2)" ).listen().onChange( function (value) {
     graphView.enable_layer(3, value);
 } );
+subfolder1.close();
 
-folder1.open();
+folder1.close();
 
 const folder2 = panel.addFolder( 'Loaders' );
 
@@ -67,6 +68,8 @@ const bt = folder3.add( {'Find independent set': function() {
 
     alert("It is your homework to implement this functionality!");
 }}, "Find independent set");
+
+folder3.close();
 
 const stats = new Stats();
 document.body.appendChild(stats.dom);
