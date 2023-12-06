@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import Stats from 'three/examples/jsm/libs/stats.module'
 
 import Graph from "./graphs/graph";
 import GraphViewModel from "./graphs/graphViewModel";
@@ -13,61 +14,72 @@ const graph = new Graph();
 graph.loadGraph(str_graph);
 graph.loadIndependentSet(str_IS);
 
+const graphView = new GraphViewModel(graph, scene.scene);
+
 const panel = new GUI( { width: 310 } );
 
 const folder1 = panel.addFolder( 'Vizualization' );
-const folder2 = panel.addFolder( 'Loaders' );
-const folder3 = panel.addFolder( 'Algorithm' );
 
-// panelSettings = {
-//     'modify time scale': 1.0
-// };
+folder1.add( {'Show between layer edges': false}, "Show between layer edges" ).listen().onChange( function (value) {
+    graphView.show_between_layer_edges(value);
+} );
+folder1.add( {'Show layer edges': false}, "Show layer edges" ).listen().onChange( function (value) {
+    graphView.show_layer_edges(value);
+} );
+folder1.add( {'Show wrong vertexes': true}, "Show wrong vertexes" ).listen().onChange( function (value) {
+    graphView.show_wrong_vertexes(value);
+} );
 
-// const baseNames = [ 'None', ...Object.keys( baseActions ) ];
-
-// for ( let i = 0, l = baseNames.length; i !== l; ++ i ) {
-
-//     const name = baseNames[ i ];
-//     const settings = baseActions[ name ];
-//     panelSettings[ name ] = function () {
-
-//         const currentSettings = baseActions[ currentBaseAction ];
-//         const currentAction = currentSettings ? currentSettings.action : null;
-//         const action = settings ? settings.action : null;
-
-//         if ( currentAction !== action ) {
-
-//             prepareCrossFade( currentAction, action, 0.35 );
-
-//         }
-
-//     };
-
-//     crossFadeControls.push( folder1.add( panelSettings, name ) );
-
-// }
-
-// for ( const name of Object.keys( additiveActions ) ) {
-
-//     const settings = additiveActions[ name ];
-
-//     panelSettings[ name ] = settings.weight;
-//     folder2.add( panelSettings, name, 0.0, 1.0, 0.01 ).listen().onChange( function ( weight ) {
-
-//         setWeight( settings.action, weight );
-//         settings.weight = weight;
-
-//     } );
-
-// }
-
-// folder3.add( panelSettings, 'modify time scale', 0.0, 1.5, 0.01 ).onChange( modifyTimeScale );
+const subfolder1 = folder1.addFolder( 'Layers' );
+subfolder1.add( {'Layer 0 (Independent set)': true}, "Layer 0 (Independent set)" ).listen().onChange( function (value) {
+    graphView.enable_layer(0, value);
+} );
+subfolder1.add( {'Layer 1 (Dist = 1)': true}, "Layer 1 (Dist = 1)" ).listen().onChange( function (value) {
+    graphView.enable_layer(1, value);
+} );
+subfolder1.add( {'Layer 2 (Dist = 2)': true}, "Layer 2 (Dist = 2)" ).listen().onChange( function (value) {
+    graphView.enable_layer(2, value);
+} );
+subfolder1.add( {'Layer 3 (Lost | Dist > 2)': true}, "Layer 3 (Lost | Dist > 2)" ).listen().onChange( function (value) {
+    graphView.enable_layer(3, value);
+} );
 
 folder1.open();
-folder2.open();
-folder3.open();
 
-const graphView = new GraphViewModel(graph, scene.scene);
+const folder2 = panel.addFolder( 'Loaders' );
+
+folder2.add( {'Graph': str_graph.substring(1, str_graph.length - 1)}, "Graph" ).onFinishChange( function (value) {
+    graph.loadGraph( '[' + value + ']' );
+    graphView.update_graph();
+} );
+folder2.add( {'Independent set': str_IS.substring(1, str_IS.length - 1)}, "Independent set" ).onFinishChange( function (value) {
+    graph.loadIndependentSet( '[' + value + ']' );
+    graphView.update_state();
+} );
+
+folder2.open();
+
+const folder3 = panel.addFolder( 'Algorithm' );
+
+const bt = folder3.add( {'Find independent set': function() {
+    const independentSet = graph.findIndependentSet();
+    console.log(independentSet);
+
+    alert("It is your homework to implement this functionality!");
+}}, "Find independent set");
+
+const stats = new Stats();
+document.body.appendChild(stats.dom);
+
+window.addEventListener('resize', onWindowResize, false)
+function onWindowResize() {
+
+    scene.camera.aspect = window.innerWidth / window.innerHeight;
+    scene.camera.updateProjectionMatrix();
+    scene.renderer.setSize(window.innerWidth, window.innerHeight);
+    animate();
+
+}
 
 function animate() {
 
@@ -76,6 +88,8 @@ function animate() {
     scene.controls.update();
 
     scene.renderer.render( scene.scene, scene.camera );
+
+    stats.update();
 
 }
 

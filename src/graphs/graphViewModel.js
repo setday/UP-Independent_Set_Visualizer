@@ -5,6 +5,8 @@ class GraphViewModel {
         this.scene = scene;
         this.graph = graph;
 
+        this.wrong_vertexes = true;
+
         this.edges = [];
         this.vertexes = [];
         this.layers = [
@@ -14,11 +16,16 @@ class GraphViewModel {
             [], // dist > 2 (lost)
         ];
 
+        this.layers_show = [true, true, true, true];
+        this.layer_edges_show = false;
+        this.between_layer_edges_show = false;
+
         this.update_graph();
     }
 
     update_graph() {
         this.update_vertexes();
+        this.edges = [];
     }
 
     update_vertexes() {
@@ -31,14 +38,14 @@ class GraphViewModel {
 
     update_edges() {
         this.edges = [];
-        for (let i = 0; i < this.graph.edges.length; i++) {
-            const [source, target] = this.graph.edges[i];
+        this.graph.edges.forEach((edge) => {
+            const [source, target] = edge;
             if (source == target) {
                 this.edges.push(new LoopViewModel(this.vertexes[source], this.scene));
             } else {
                 this.edges.push(new EdgeViewModel(this.vertexes[source], this.vertexes[target], this.scene));
             }
-        }
+        });
     }
 
     update_state() {
@@ -46,7 +53,6 @@ class GraphViewModel {
 
         this.vertexes.forEach(vertex => {
             vertex.layer = -1;
-            vertex.change_color(0xff0000);
             vertex.corrupted = true;
         });
 
@@ -54,7 +60,6 @@ class GraphViewModel {
             this.vertexes.forEach(vertex => {
                 vertex.layer = 1;
                 vertex.corrupted = false;
-                vertex.change_color(0xffffff);
                 this.layers[1].push(vertex.id);
             });
 
@@ -67,7 +72,6 @@ class GraphViewModel {
             const vertex = this.vertexes[ISID];
             vertex.layer = 0;
             vertex.corrupted = false;
-            vertex.change_color(0xffffff);
             this.layers[0].push(vertex.id);
         });
 
@@ -81,9 +85,7 @@ class GraphViewModel {
 
             if (sourceVertex.layer == 0 && targetVertex.layer == 0) {
                 sourceVertex.corrupted = true;
-                sourceVertex.change_color(0xff0000);
                 targetVertex.corrupted = true;
-                targetVertex.change_color(0xff0000);
 
                 return;
             }
@@ -91,7 +93,6 @@ class GraphViewModel {
             if (sourceVertex.layer == 0 && targetVertex.layer == -1) {
                 targetVertex.layer = 1;
                 targetVertex.corrupted = false;
-                targetVertex.change_color(0xaaaaaa);
                 this.layers[1].push(target);
 
                 return;
@@ -99,7 +100,6 @@ class GraphViewModel {
             if (targetVertex.layer == 0 && sourceVertex.layer == -1) {
                 sourceVertex.layer = 1;
                 sourceVertex.corrupted = false;
-                sourceVertex.change_color(0xaaaaaa);
                 this.layers[1].push(source);
             }
         });
@@ -112,7 +112,6 @@ class GraphViewModel {
             if (sourceVertex.layer == 1 && targetVertex.layer == -1) {
                 targetVertex.layer = 2;
                 targetVertex.corrupted = false;
-                targetVertex.change_color(0x444444);
                 this.layers[2].push(target);
 
                 return;
@@ -120,7 +119,6 @@ class GraphViewModel {
             if (targetVertex.layer == 1 && sourceVertex.layer == -1) {
                 sourceVertex.layer = 2;
                 sourceVertex.corrupted = false;
-                sourceVertex.change_color(0x444444);
                 this.layers[2].push(source);
             }
         });
@@ -133,9 +131,34 @@ class GraphViewModel {
         });
 
         this.compute_layers_positions();
-
         this.edges.forEach(edge => {
             edge.update();
+        });
+
+        this.color_vertexes();
+    }
+
+    color_vertexes() {
+        this.vertexes.forEach(vertex => {
+            if (vertex.corrupted && this.wrong_vertexes) {
+                vertex.change_color(0xff0000);
+                return;
+            }
+
+            switch (vertex.layer) {
+                case 0:
+                    vertex.change_color(0xffffff);
+                    break;
+                case 1:
+                    vertex.change_color(0xaaaaaa);
+                    break;
+                case 2:
+                    vertex.change_color(0x444444);
+                    break;
+                case 3:
+                    vertex.change_color(0x000000);
+                    break;
+            }
         });
     }
 
@@ -164,6 +187,78 @@ class GraphViewModel {
             if (dx >= numberSquare) {
                 dx = 0;
                 dz++;
+            }
+        });
+    }
+
+    enable_layer(layer, show) {
+        this.layers_show[layer] = show;
+
+        this.layers[layer].forEach(vertexID => {
+            const vertex = this.vertexes[vertexID];
+            if (show) {
+                vertex.show();
+            } else {
+                vertex.hide();
+            }
+        });
+
+        this.edges.forEach(edge => {
+            const source = edge.source;
+            const target = edge.target;
+            if (source.layer == layer && target.layer == layer) {
+                if (show && this.layer_edges_show) {
+                    edge.show();
+                } else {
+                    edge.hide();
+                }
+            } else if ((source.layer == layer || target.layer == layer)) {
+                if (show && this.between_layer_edges_show) {
+                    edge.show();
+                } else {
+                    edge.hide();
+                }
+            }
+        });
+    }
+
+    show_wrong_vertexes(show) {
+        this.wrong_vertexes = show;
+        this.color_vertexes();
+    }
+
+    show_layer_edges(show) {
+        if (show && this.edges.length == 0) this.update_edges();
+
+        this.layer_edges_show = show;
+
+        this.edges.forEach(edge => {
+            const source = edge.source;
+            const target = edge.target;
+            if (source.layer == target.layer && this.layers_show[source.layer]) {
+                if (show) {
+                    edge.show();
+                } else {
+                    edge.hide();
+                }
+            }
+        });
+    }
+
+    show_between_layer_edges(show) {
+        if (show && this.edges.length == 0) this.update_edges();
+
+        this.between_layer_edges_show = show;
+
+        this.edges.forEach(edge => {
+            const source = edge.source;
+            const target = edge.target;
+            if (source.layer != target.layer && this.layers_show[source.layer] && this.layers_show[target.layer]) {
+                if (show) {
+                    edge.show();
+                } else {
+                    edge.hide();
+                }
             }
         });
     }
@@ -208,15 +303,25 @@ class EdgeViewModel {
         this.target = target;
 
         const points = [
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(0, 0, 0)
+            new THREE.Vector3(
+                this.source.mesh.position.x,
+                this.source.mesh.position.y,
+                this.source.mesh.position.z
+            ),
+            new THREE.Vector3(
+                this.target.mesh.position.x,
+                this.target.mesh.position.y,
+                this.target.mesh.position.z
+            ),
         ];
         const geometry = new THREE.BufferGeometry().setFromPoints( points );
-        const material = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2.0 });
+        const material = new THREE.LineBasicMaterial({ color: 0x000000 });
 
         this.mesh = new THREE.Line(geometry, material);
 
         scene.add(this.mesh);
+
+        this.hide();
     }
 
     update() {
@@ -238,11 +343,17 @@ class EdgeViewModel {
     show() {
         this.mesh.visible = true;
     }
+
+    destroy() {
+        this.mesh.geometry.dispose();
+        this.mesh.material.dispose();
+    }
 }
 
 class LoopViewModel {
     constructor(source, scene) {
         this.source = source;
+        this.target = source;
 
         const geometry = new THREE.TorusGeometry( 0.7, 0.03, 3, 5 );
         const material = new THREE.MeshPhongMaterial({ color: 0x000000 });
@@ -251,6 +362,8 @@ class LoopViewModel {
         this.mesh.rotation.x = Math.PI / 2;
 
         scene.add(this.mesh);
+
+        this.hide();
     }
 
     update() {
@@ -265,6 +378,11 @@ class LoopViewModel {
 
     show() {
         this.mesh.visible = true;
+    }
+
+    destroy() {
+        this.mesh.geometry.dispose();
+        this.mesh.material.dispose();
     }
 }
 

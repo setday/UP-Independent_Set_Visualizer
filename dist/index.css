@@ -9,15 +9,21 @@ body {
 }
 
 header {
-    background: linear-gradient(180deg, #011635 0%, #011635 80%, #00000000 100%);
+    background: linear-gradient(0deg, #011635 0%, #011635 99%, #00000000 100%);
     color: #fff;
-    padding: 10px 10px 20px 10px;
+    padding: 10px 10px 10px 10px;
     text-align: center;
     font-family: 'Nova Square', sans-serif;
     width: fit-content;
     height: fit-content;
     position: fixed;
-    top: 0;
+    border-radius: 10px 10px 0 0;   
+    bottom: 0;
+}
+
+a {
+    color: #fff;
+    text-decoration: none;
 }
 
 .project_name {
